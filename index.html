@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Inventory editor</title>
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 <main>
@@ -26,7 +26,7 @@
 <div class="tabs" role="tablist" aria-label="Workspace">
 <button id="inventory-tab" role="tab" aria-selected="true" aria-controls="inventory-panel">Inventory <span id="count">(0 items)</span></button>
 <button id="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-panel" tabindex="-1">Catalogue</button>
-<button id="presets-tab" role="tab" aria-selected="false" aria-controls="presets-panel" tabindex="-1">⚡ Presets (Сеты)</button>
+<button id="presets-tab" role="tab" aria-selected="false" aria-controls="presets-panel" tabindex="-1">Presets (Сеты)</button>
 </div>
 <div class="workspace">
 <section id="inventory-panel" role="tabpanel" aria-labelledby="inventory-tab">
@@ -48,15 +48,15 @@
 <label id="catalog-weapon-wrapper">Оружие<select id="catalog-weapon"><option value="">Все оружие</option></select></label>
 <label>Color<select id="catalog-color">
 <option value="">All colors</option>
-<option value="red">🔴 Red (Красный)</option>
-<option value="blue">🔵 Blue (Синий)</option>
-<option value="green">🟢 Green (Зеленый)</option>
-<option value="yellow">🟡 Yellow/Gold (Золотой)</option>
-<option value="purple">🟣 Purple (Фиолетовый)</option>
-<option value="pink">🌸 Pink (Розовый)</option>
-<option value="orange">🟠 Orange (Оранжевый)</option>
-<option value="white">⚪ White (Белый)</option>
-<option value="black">⚫ Black (Черный)</option>
+<option value="red">Red (Красный)</option>
+<option value="blue">Blue (Синий)</option>
+<option value="green">Green (Зеленый)</option>
+<option value="yellow">Yellow / Gold (Золотой)</option>
+<option value="purple">Purple (Фиолетовый)</option>
+<option value="pink">Pink (Розовый)</option>
+<option value="orange">Orange (Оранжевый)</option>
+<option value="white">White (Белый)</option>
+<option value="black">Black (Черный)</option>
 </select></label>
 <label>View<select id="catalog-view"><option value="variants">Variants</option><option value="definitions">Definitions</option></select></label>
 </div>
@@ -84,23 +84,23 @@
 <div class="presets-filters">
 <div class="side-selector" role="group" aria-label="Filter by side">
 <button type="button" class="side-btn active" data-side="all">Все сеты</button>
-<button type="button" class="side-btn" data-side="custom">⭐ Мои сеты</button>
-<button type="button" class="side-btn" data-side="T">🔴 T-Side</button>
-<button type="button" class="side-btn" data-side="CT">🔵 CT-Side</button>
+<button type="button" class="side-btn" data-side="custom"><svg class="svg-icon" viewBox="0 0 24 24" width="12" height="12" fill="#ffd166"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Мои сеты</button>
+<button type="button" class="side-btn" data-side="T"><span class="side-dot side-dot-t"></span>T-Side</button>
+<button type="button" class="side-btn" data-side="CT"><span class="side-dot side-dot-ct"></span>CT-Side</button>
 </div>
 <label class="presets-color-label">Цвет сета
 <select id="presets-color-filter">
 <option value="">Все цвета</option>
-<option value="red">🔴 Красные</option>
-<option value="blue">🔵 Синие</option>
-<option value="yellow">🟡 Золотые</option>
-<option value="white">⚪ Белые</option>
-<option value="purple">🟣 Фиолетовые</option>
-<option value="green">🟢 Зеленые</option>
-<option value="black">⚫ Черные</option>
+<option value="red">Красные</option>
+<option value="blue">Синие</option>
+<option value="yellow">Золотые</option>
+<option value="white">Белые</option>
+<option value="purple">Фиолетовые</option>
+<option value="green">Зеленые</option>
+<option value="black">Черные</option>
 </select>
 </label>
-<button id="btn-create-preset" type="button" class="btn-create-preset">➕ Создать свой сет</button>
+<button id="btn-create-preset" type="button" class="btn-create-preset"><svg class="svg-icon" viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Создать свой сет</button>
 </div>
 <div id="preset-progress-container" class="preset-progress-container" hidden>
 <span id="preset-progress-text">Добавление сета...</span>
@@ -130,7 +130,7 @@
 </fieldset>
 <p id="selection-reason"></p>
 <button id="create" disabled>Add to inventory</button>
-<button id="add-to-preset" type="button" class="btn-add-to-preset" hidden>⭐ Добавить в мой сет</button>
+<button id="add-to-preset" type="button" class="btn-add-to-preset" hidden><svg class="svg-icon" viewBox="0 0 24 24" width="14" height="14" fill="#ffd166"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Добавить в мой сет</button>
 <p id="connect-hint" class="connect-hint"></p>
 <button id="delete" hidden disabled>Delete item</button>
 </section>
@@ -146,7 +146,7 @@
 <div id="modal-create-preset" class="modal-backdrop" hidden>
   <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="create-preset-heading">
     <div class="modal-header">
-      <h3 id="create-preset-heading">✨ Создать свой сет</h3>
+      <h3 id="create-preset-heading">Создать свой сет</h3>
       <button type="button" class="modal-close" id="modal-create-close" aria-label="Закрыть">&times;</button>
     </div>
     <form id="form-create-preset" class="modal-body">
@@ -158,23 +158,23 @@
         Сторона
         <select id="select-preset-side">
           <option value="all">Любая сторона (T & CT)</option>
-          <option value="T">🔴 Только T-Side</option>
-          <option value="CT">🔵 Только CT-Side</option>
+          <option value="T">Только T-Side</option>
+          <option value="CT">Только CT-Side</option>
         </select>
       </label>
       <label>
         Цвет темы
         <select id="select-preset-color">
           <option value="">Все цвета / Без цвета</option>
-          <option value="red">🔴 Красный</option>
-          <option value="blue">🔵 Синий</option>
-          <option value="green">🟢 Зеленый</option>
-          <option value="yellow">🟡 Золотой / Желтый</option>
-          <option value="purple">🟣 Фиолетовый</option>
-          <option value="pink">🌸 Розовый</option>
-          <option value="orange">🟠 Оранжевый</option>
-          <option value="white">⚪ Белый</option>
-          <option value="black">⚫ Черный</option>
+          <option value="red">Красный</option>
+          <option value="blue">Синий</option>
+          <option value="green">Зеленый</option>
+          <option value="yellow">Золотой / Желтый</option>
+          <option value="purple">Фиолетовый</option>
+          <option value="pink">Розовый</option>
+          <option value="orange">Оранжевый</option>
+          <option value="white">Белый</option>
+          <option value="black">Черный</option>
         </select>
       </label>
       <label>
@@ -193,7 +193,7 @@
 <div id="modal-add-to-preset" class="modal-backdrop" hidden>
   <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="add-preset-heading">
     <div class="modal-header">
-      <h3 id="add-preset-heading">⭐ Добавить в свой сет</h3>
+      <h3 id="add-preset-heading">Добавить в свой сет</h3>
       <button type="button" class="modal-close" id="modal-add-close" aria-label="Закрыть">&times;</button>
     </div>
     <div class="modal-body">
@@ -206,7 +206,7 @@
       </div>
       <div id="add-preset-list" class="preset-picker-list"></div>
       <button type="button" id="btn-create-from-picker" class="btn-create-preset" style="width: 100%; justify-content: center; margin-top: 8px;">
-        ➕ Создать новый сет с этим скином
+        <svg class="svg-icon" viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Создать новый сет с этим скином
       </button>
     </div>
     <div class="modal-footer">
@@ -217,6 +217,6 @@
 
 <div id="toast-notification" class="toast-notification" hidden></div>
 </main>
-<script type="module" src="app.js?v=7"></script>
+<script type="module" src="app.js?v=8"></script>
 </body>
 </html>

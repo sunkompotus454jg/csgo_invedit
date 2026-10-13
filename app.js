@@ -370,9 +370,9 @@ function renderSelection() {
     let hintText = '';
     if (record && item && !connection.canCreate) {
       if (!connection.inventory.ready || connection.socket === null) {
-        hintText = '⚡ Нажмите «Connect» для подключения к игре';
+        hintText = 'Нажмите «Connect» для подключения к игре';
       } else if (connection.pendingCreate || connection.pendingDelete) {
-        hintText = '⏳ Ожидание ответа...';
+        hintText = 'Ожидание ответа...';
       }
     }
     hint.textContent = hintText;
@@ -642,7 +642,7 @@ function openAddToPresetModal(record) {
 
     const countSpan = document.createElement('span');
     countSpan.className = 'preset-picker-item-count';
-    countSpan.textContent = hasItem ? `✓ В сете (${preset.items.length})` : `${preset.items.length} предм.`;
+    countSpan.textContent = hasItem ? `В сете (${preset.items.length})` : `${preset.items.length} предм.`;
 
     btn.append(titleSpan, countSpan);
     btn.addEventListener('click', () => {
@@ -672,14 +672,14 @@ function addSkinToPreset(presetId, record) {
   preset.items.push({ key: record.key, name: record.name });
   saveUserPresets(presets);
   showToast(alreadyHas
-    ? `⚠️ Скин "${record.name}" добавлен повторно в "${preset.title}"`
-    : `✅ Скин "${record.name}" добавлен в сет "${preset.title}"!`);
+    ? `Скин "${record.name}" добавлен повторно в "${preset.title}"`
+    : `Скин "${record.name}" добавлен в сет "${preset.title}"!`);
 
   const addBtn = $('add-to-preset');
   if (addBtn) {
-    const prevText = addBtn.textContent;
-    addBtn.textContent = '✅ Добавлено!';
-    setTimeout(() => { if (addBtn) addBtn.textContent = prevText; }, 1500);
+    const prevText = addBtn.innerHTML;
+    addBtn.textContent = 'Добавлено!';
+    setTimeout(() => { if (addBtn) addBtn.innerHTML = prevText; }, 1500);
   }
   renderPresets();
 }
@@ -690,7 +690,7 @@ function removeSkinFromPreset(presetId, itemIndex) {
   if (!preset) return;
   const removed = preset.items.splice(itemIndex, 1);
   saveUserPresets(presets);
-  showToast(`🗑️ Скин "${removed[0]?.name || ''}" удален из сета`);
+  showToast(`Скин "${removed[0]?.name || ''}" удален из сета`);
   renderPresets();
 }
 
@@ -701,7 +701,7 @@ function deleteUserPreset(presetId) {
   if (!confirm(`Удалить сет "${preset.title}"?`)) return;
   const updated = presets.filter(p => p.id !== presetId);
   saveUserPresets(updated);
-  showToast(`🗑️ Сет "${preset.title}" удален`);
+  showToast(`Сет "${preset.title}" удален`);
   renderPresets();
 }
 
@@ -741,7 +741,7 @@ function createPresetCard(preset) {
   if (preset.isCustom) {
     const customBadge = document.createElement('span');
     customBadge.className = 'badge badge-custom';
-    customBadge.textContent = '⭐ Мой сет';
+    customBadge.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" width="10" height="10" fill="currentColor" style="margin-right:3px;vertical-align:-1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Мой сет';
     badges.append(customBadge);
   }
   const sideBadge = document.createElement('span');
@@ -757,7 +757,7 @@ function createPresetCard(preset) {
     deleteBtn.type = 'button';
     deleteBtn.className = 'preset-card-delete';
     deleteBtn.title = 'Удалить этот сет';
-    deleteBtn.textContent = '🗑️';
+    deleteBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       deleteUserPreset(preset.id);
@@ -772,7 +772,7 @@ function createPresetCard(preset) {
   if (preset.items.length === 0) {
     const emptyNotice = document.createElement('div');
     emptyNotice.className = 'preset-empty-items';
-    emptyNotice.textContent = 'В этом сете пока нет скинов. Выберите скин в Каталоге и нажмите «⭐ Добавить в мой сет».';
+    emptyNotice.textContent = 'В этом сете пока нет скинов. Выберите скин в Каталоге и нажмите «Добавить в мой сет».';
     list.append(emptyNotice);
   } else {
     preset.items.forEach((item, index) => {
@@ -799,7 +799,7 @@ function createPresetCard(preset) {
         removeBtn.type = 'button';
         removeBtn.className = 'preset-item-remove';
         removeBtn.title = 'Удалить скин из сета';
-        removeBtn.textContent = '✕';
+        removeBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
         removeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           removeSkinFromPreset(preset.id, index);
@@ -814,7 +814,7 @@ function createPresetCard(preset) {
   const applyBtn = document.createElement('button');
   applyBtn.type = 'button';
   applyBtn.className = 'btn-apply-preset';
-  applyBtn.textContent = `⚡ Добавить весь сет (${preset.items.length})`;
+  applyBtn.innerHTML = '<svg class="svg-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Добавить весь сет (' + preset.items.length + ')';
   applyBtn.disabled = !connection.inventory.ready || isApplyingPreset || preset.items.length === 0;
   applyBtn.addEventListener('click', () => applyPreset(preset));
 
@@ -873,10 +873,10 @@ async function applyPreset(preset) {
     }
 
     progressBar.style.width = '100%';
-    progressText.textContent = `✅ Сет "${preset.title}" успешно добавлен в инвентарь (${successCount} предм.)!`;
+    progressText.textContent = `Сет "${preset.title}" успешно добавлен в инвентарь (${successCount} предм.)!`;
     setTimeout(() => { progressContainer.hidden = true; }, 4000);
   } catch (err) {
-    progressText.textContent = `❌ Ошибка: ${err.message}`;
+    progressText.textContent = `Ошибка: ${err.message}`;
     setTimeout(() => { progressContainer.hidden = true; }, 4000);
   } finally {
     isApplyingPreset = false;
@@ -935,8 +935,8 @@ $('form-create-preset')?.addEventListener('submit', event => {
 
   closeCreatePresetModal();
   showToast(pendingSkinForNewPreset
-    ? `✨ Сет "${title}" создан и скин добавлен!`
-    : `✨ Сет "${title}" создан!`);
+    ? `Сет "${title}" создан и скин добавлен!`
+    : `Сет "${title}" создан!`);
 
   activePresetSide = 'custom';
   document.querySelectorAll('.side-selector .side-btn').forEach(b => {
