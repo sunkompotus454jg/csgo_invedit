@@ -1,7 +1,7 @@
 import { InventoryConnection } from './connection.js';
-import { loadCatalog } from './catalog.js';
+import { loadCatalog } from './catalog.js?v=6';
 import { loadIcons, createThumbnail, setThumbnail } from './icons.js';
-import { Presentation, filterInventory } from './presentation.js';
+import { Presentation, filterInventory } from './presentation.js?v=6';
 import { VirtualGrid } from './grid.js';
 import { CreationPreferences } from './creation-draft.js';
 import { PRESETS } from './presets-data.js';
@@ -20,6 +20,198 @@ let renderedWearKey = null, wearDirty = false;
 let activePresetSide = 'all';
 let activePresetColor = '';
 let isApplyingPreset = false;
+
+const CATEGORY_LABELS = {
+  weapons: 'Оружие (Weapons)',
+  knives: 'Ножи (Knives)',
+  gloves: 'Перчатки (Gloves)',
+  stickers: 'Наклейки (Stickers)',
+  agents: 'Агенты (Agents)',
+  containers: 'Кейсы (Containers)',
+  graffiti: 'Граффити (Graffiti)',
+  music: 'Музыка (Music kits)',
+  patches: 'Нашивки (Patches)',
+  collectibles: 'Значки (Collectibles)',
+  tools: 'Инструменты (Tools)',
+  keys: 'Ключи (Keys)',
+  other: 'Другое (Other)'
+};
+
+const WEAPON_GROUPS = [
+  {
+    key: 'Rifle',
+    label: 'Штурмовые винтовки (Rifles)',
+    category: 'weapons',
+    items: [
+      { defIndex: 7, name: 'AK-47' },
+      { defIndex: 16, name: 'M4A4' },
+      { defIndex: 60, name: 'M4A1-S' },
+      { defIndex: 8, name: 'AUG' },
+      { defIndex: 10, name: 'FAMAS' },
+      { defIndex: 13, name: 'Galil AR' },
+      { defIndex: 39, name: 'SG 553' }
+    ]
+  },
+  {
+    key: 'Sniper Rifle',
+    label: 'Снайперские винтовки (Snipers)',
+    category: 'weapons',
+    items: [
+      { defIndex: 9, name: 'AWP' },
+      { defIndex: 40, name: 'SSG 08' },
+      { defIndex: 38, name: 'SCAR-20' },
+      { defIndex: 11, name: 'G3SG1' }
+    ]
+  },
+  {
+    key: 'Pistol',
+    label: 'Пистолеты (Pistols)',
+    category: 'weapons',
+    items: [
+      { defIndex: 1, name: 'Desert Eagle' },
+      { defIndex: 4, name: 'Glock-18' },
+      { defIndex: 61, name: 'USP-S' },
+      { defIndex: 36, name: 'P250' },
+      { defIndex: 3, name: 'Five-SeveN' },
+      { defIndex: 63, name: 'CZ75-Auto' },
+      { defIndex: 30, name: 'Tec-9' },
+      { defIndex: 2, name: 'Dual Berettas' },
+      { defIndex: 32, name: 'P2000' },
+      { defIndex: 64, name: 'R8 Revolver' }
+    ]
+  },
+  {
+    key: 'SMG',
+    label: 'Пистолеты-пулеметы (SMG)',
+    category: 'weapons',
+    items: [
+      { defIndex: 17, name: 'MAC-10' },
+      { defIndex: 34, name: 'MP9' },
+      { defIndex: 33, name: 'MP7' },
+      { defIndex: 23, name: 'MP5-SD' },
+      { defIndex: 19, name: 'P90' },
+      { defIndex: 24, name: 'UMP-45' },
+      { defIndex: 26, name: 'PP-Bizon' }
+    ]
+  },
+  {
+    key: 'Shotgun',
+    label: 'Дробовики (Shotguns)',
+    category: 'weapons',
+    items: [
+      { defIndex: 27, name: 'MAG-7' },
+      { defIndex: 35, name: 'Nova' },
+      { defIndex: 29, name: 'Sawed-Off' },
+      { defIndex: 25, name: 'XM1014' }
+    ]
+  },
+  {
+    key: 'Machinegun',
+    label: 'Пулеметы (Machine guns)',
+    category: 'weapons',
+    items: [
+      { defIndex: 14, name: 'M249' },
+      { defIndex: 28, name: 'Negev' }
+    ]
+  },
+  {
+    key: 'Knife',
+    label: 'Ножи (Knives)',
+    category: 'knives',
+    items: [
+      { defIndex: 507, name: 'Karambit' },
+      { defIndex: 515, name: 'Butterfly Knife' },
+      { defIndex: 508, name: 'M9 Bayonet' },
+      { defIndex: 500, name: 'Bayonet' },
+      { defIndex: 514, name: 'Bowie Knife' },
+      { defIndex: 503, name: 'Classic Knife' },
+      { defIndex: 512, name: 'Falchion Knife' },
+      { defIndex: 505, name: 'Flip Knife' },
+      { defIndex: 506, name: 'Gut Knife' },
+      { defIndex: 509, name: 'Huntsman Knife' },
+      { defIndex: 520, name: 'Navaja Knife' },
+      { defIndex: 521, name: 'Nomad Knife' },
+      { defIndex: 517, name: 'Paracord Knife' },
+      { defIndex: 516, name: 'Shadow Daggers' },
+      { defIndex: 525, name: 'Skeleton Knife' },
+      { defIndex: 522, name: 'Stiletto Knife' },
+      { defIndex: 518, name: 'Survival Knife' },
+      { defIndex: 523, name: 'Talon Knife' },
+      { defIndex: 519, name: 'Ursus Knife' }
+    ]
+  },
+  {
+    key: 'Gloves',
+    label: 'Перчатки (Gloves)',
+    category: 'gloves',
+    items: [
+      { defIndex: 5030, name: 'Sport Gloves' },
+      { defIndex: 5034, name: 'Specialist Gloves' },
+      { defIndex: 5033, name: 'Moto Gloves' },
+      { defIndex: 5031, name: 'Driver Gloves' },
+      { defIndex: 5032, name: 'Hand Wraps' },
+      { defIndex: 5035, name: 'Hydra Gloves' },
+      { defIndex: 5027, name: 'Bloodhound Gloves' },
+      { defIndex: 4725, name: 'Broken Fang Gloves' }
+    ]
+  }
+];
+
+function populateWeaponDropdown(categoryVal, selectElem, wrapperElem) {
+  if (!selectElem || !wrapperElem) return;
+  const isExcluded = ['stickers', 'agents', 'music', 'containers', 'graffiti', 'patches', 'collectibles', 'tools', 'keys', 'other'].includes(categoryVal);
+  if (isExcluded) {
+    wrapperElem.hidden = true;
+    selectElem.value = '';
+    return;
+  }
+  wrapperElem.hidden = false;
+
+  const currentVal = selectElem.value;
+  selectElem.replaceChildren();
+
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  if (categoryVal === 'weapons') {
+    defaultOption.textContent = 'Все оружие';
+  } else if (categoryVal === 'knives') {
+    defaultOption.textContent = 'Все ножи';
+  } else if (categoryVal === 'gloves') {
+    defaultOption.textContent = 'Все перчатки';
+  } else {
+    defaultOption.textContent = 'Все оружие и типы';
+  }
+  selectElem.append(defaultOption);
+
+  let filteredGroups = WEAPON_GROUPS;
+  if (categoryVal === 'weapons') {
+    filteredGroups = WEAPON_GROUPS.filter(g => g.category === 'weapons');
+  } else if (categoryVal === 'knives') {
+    filteredGroups = WEAPON_GROUPS.filter(g => g.category === 'knives');
+  } else if (categoryVal === 'gloves') {
+    filteredGroups = WEAPON_GROUPS.filter(g => g.category === 'gloves');
+  }
+
+  const validDefIndexes = new Set();
+  for (const group of filteredGroups) {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = group.label;
+    for (const item of group.items) {
+      const opt = document.createElement('option');
+      opt.value = String(item.defIndex);
+      opt.textContent = item.name;
+      optgroup.append(opt);
+      validDefIndexes.add(String(item.defIndex));
+    }
+    selectElem.append(optgroup);
+  }
+
+  if (validDefIndexes.has(currentVal)) {
+    selectElem.value = currentVal;
+  } else {
+    selectElem.value = '';
+  }
+}
 
 function creationDraft() {
   draftError = '';
@@ -191,11 +383,15 @@ function renderCatalog(reset = false) {
   $('catalog-all').disabled = view !== 'definitions';
   $('advanced-label').hidden = view !== 'definitions';
   const color = $('catalog-color') ? $('catalog-color').value : '';
+  const weapon = $('catalog-weapon') && !$('catalog-weapon-wrapper').hidden && $('catalog-weapon').value
+    ? Number($('catalog-weapon').value)
+    : null;
   catalogueMatches = catalog.search({
     view,
     category: $('catalog-category').value,
     query: $('catalog-search').value,
     color,
+    weapon,
     allDefinitions: $('catalog-all').checked
   });
   $('catalog-count').textContent = `${catalogueMatches.length.toLocaleString()} items`;
@@ -204,7 +400,14 @@ function renderCatalog(reset = false) {
 }
 
 function rebuildInventory(reset = false) {
-  inventoryMatches = filterInventory(connection.inventory.items.values(), presentation, { query: $('inventory-search').value, category: $('inventory-category').value });
+  const invWeapon = $('inventory-weapon') && !$('inventory-weapon-wrapper').hidden && $('inventory-weapon').value
+    ? Number($('inventory-weapon').value)
+    : null;
+  inventoryMatches = filterInventory(connection.inventory.items.values(), presentation, {
+    query: $('inventory-search').value,
+    category: $('inventory-category').value,
+    weapon: invWeapon
+  });
   $('inventory-count').textContent = `${inventoryMatches.length.toLocaleString()} of ${connection.inventory.items.size.toLocaleString()} items`;
   $('empty').hidden = inventoryMatches.length > 0;
   $('empty').textContent = !connection.inventory.ready ? 'Connect to receive inventory.' : connection.inventory.items.size ? 'No items match your filters.' : 'Inventory is empty.';
@@ -274,9 +477,14 @@ $('connect').addEventListener('click', () => connection.connect());
 $('disconnect').addEventListener('click', () => connection.disconnect());
 window.addEventListener('pagehide', () => connection.disconnect());
 
-for (const id of ['catalog-view', 'catalog-category', 'catalog-all', 'catalog-search']) {
+for (const id of ['catalog-view', 'catalog-all', 'catalog-search']) {
   $(id).addEventListener(id === 'catalog-search' ? 'input' : 'change', () => renderCatalog(true));
 }
+$('catalog-category').addEventListener('change', () => {
+  populateWeaponDropdown($('catalog-category').value, $('catalog-weapon'), $('catalog-weapon-wrapper'));
+  renderCatalog(true);
+});
+$('catalog-weapon').addEventListener('change', () => renderCatalog(true));
 
 if ($('catalog-color')) {
   $('catalog-color').addEventListener('change', () => {
@@ -296,9 +504,16 @@ document.querySelectorAll('#catalog-color-pills .color-pill').forEach(pill => {
   });
 });
 
-for (const id of ['inventory-search', 'inventory-category']) {
-  $(id).addEventListener(id === 'inventory-search' ? 'input' : 'change', () => { rebuildInventory(true); renderSelection(); });
-}
+$('inventory-search').addEventListener('input', () => { rebuildInventory(true); renderSelection(); });
+$('inventory-category').addEventListener('change', () => {
+  populateWeaponDropdown($('inventory-category').value, $('inventory-weapon'), $('inventory-weapon-wrapper'));
+  rebuildInventory(true);
+  renderSelection();
+});
+$('inventory-weapon').addEventListener('change', () => {
+  rebuildInventory(true);
+  renderSelection();
+});
 $('stattrak').addEventListener('change', () => { preferences.statTrak = $('stattrak').checked; renderSelection(); });
 for (const [id, field] of [['wear-slider', 'wear'], ['seed', 'seed'], ['counter', 'counter']]) {
   $(id).addEventListener('input', () => {
@@ -515,10 +730,12 @@ async function initializeCatalog() {
     for (const category of categories) {
       const option = document.createElement('option');
       option.value = category;
-      option.textContent = category;
+      option.textContent = CATEGORY_LABELS[category] || category;
       $('catalog-category').append(option);
       $('inventory-category').append(option.cloneNode(true));
     }
+    populateWeaponDropdown($('catalog-category').value, $('catalog-weapon'), $('catalog-weapon-wrapper'));
+    populateWeaponDropdown($('inventory-category').value, $('inventory-weapon'), $('inventory-weapon-wrapper'));
     $('catalog-controls').disabled = false;
     renderCatalog();
     renderPresets();

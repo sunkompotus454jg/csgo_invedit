@@ -47,10 +47,12 @@ export class Presentation {
   }
 }
 
-export function filterInventory(items, presentation, { query = '', category = '' } = {}) {
+export function filterInventory(items, presentation, { query = '', category = '', weapon = null } = {}) {
   const tokens = normalizeSearch(query).split(' ').filter(Boolean);
   return [...items].filter(item => {
     const info = presentation.item(item);
-    return (!category || info.category === category) && tokens.every(token => info.search.includes(token));
+    return (!category || info.category === category) &&
+      (!weapon || item.defIndex === weapon) &&
+      tokens.every(token => info.search.includes(token));
   }).sort(inventoryOrder);
 }

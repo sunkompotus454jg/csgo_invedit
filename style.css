@@ -21,6 +21,8 @@ h2 { font-size: 20px; margin: 16px 0; }
 p { color: var(--muted); line-height: 1.5; }
 .toolbar, .filters, .tabs, .creation-feedback, .loading-feedback { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 button, input, select { font: inherit; border: 1px solid var(--border); border-radius: 0; color: var(--text); background: var(--card); min-height: 36px; padding: 8px 12px; }
+select optgroup { background: var(--card); color: #888888; font-weight: 700; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; padding: 6px 4px 2px; }
+select option { background: var(--card); color: var(--text); font-weight: normal; font-size: 13px; padding: 4px 8px; }
 button { cursor: pointer; }
 button:disabled { opacity: .45; cursor: default; }
 button:hover:enabled { background: var(--hover); border-color: #666666; }

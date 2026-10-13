@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Inventory editor</title>
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <main>
@@ -33,6 +33,7 @@
 <div class="filters">
 <label>Search inventory<input id="inventory-search" type="search" placeholder="Search items&hellip;"></label>
 <label>Category<select id="inventory-category"><option value="">All categories</option></select></label>
+<label id="inventory-weapon-wrapper">Оружие<select id="inventory-weapon"><option value="">Все оружие</option></select></label>
 </div>
 <p id="inventory-count" role="status" aria-live="polite"></p>
 <p id="empty">Connect to receive inventory.</p>
@@ -44,6 +45,7 @@
 <div class="filters">
 <label>Search catalogue<input id="catalog-search" type="search" placeholder="Search items&hellip;"></label>
 <label>Category<select id="catalog-category"><option value="">All categories</option></select></label>
+<label id="catalog-weapon-wrapper">Оружие<select id="catalog-weapon"><option value="">Все оружие</option></select></label>
 <label>Color<select id="catalog-color">
 <option value="">All colors</option>
 <option value="red">🔴 Red (Красный)</option>
@@ -137,6 +139,6 @@
 <button id="view-created" hidden>View in inventory</button>
 </div>
 </main>
-<script type="module" src="app.js?v=5"></script>
+<script type="module" src="app.js?v=6"></script>
 </body>
 </html>

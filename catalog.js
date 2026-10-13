@@ -31,11 +31,12 @@ export class Catalog {
     for (const record of data.attributes) this.attributes.set(record.id, record);
   }
 
-  search({ view = 'definitions', category = '', query = '', color = '', allDefinitions = false } = {}) {
+  search({ view = 'definitions', category = '', query = '', color = '', allDefinitions = false, weapon = null } = {}) {
     const tokens = normalizeSearch(query).split(' ').filter(Boolean);
     return this.data[view].filter(record =>
       (view !== 'definitions' || allDefinitions || !record.advancedOnly) &&
       (!category || record.category === category) &&
+      (!weapon || record.defIndex === weapon) &&
       (!color || this.colors.get(record.key) === color) &&
       tokens.every(token => this.searchTexts.get(record.key).includes(token)));
   }
