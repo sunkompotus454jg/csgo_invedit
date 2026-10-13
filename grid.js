@@ -1,4 +1,4 @@
-export const ROW_HEIGHT = 232;
+export const ROW_HEIGHT = 196;
 export function gridRange(count, columns, scrollTop, height, overscan = 3) {
   const rows = Math.ceil(count / columns);
   const first = Math.min(rows, Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - overscan));
@@ -24,7 +24,7 @@ export class VirtualGrid {
     this.observer = new ResizeObserver(() => {
       if (!viewport.clientWidth) return;
       const anchor = this.anchor();
-      this.columns = Math.max(1, Math.floor((viewport.clientWidth + 12) / 172));
+      this.columns = Math.max(1, Math.floor((viewport.clientWidth + 12) / 164));
       this.updateHeight();
       this.restore(anchor);
       this.schedule();

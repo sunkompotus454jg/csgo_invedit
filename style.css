@@ -44,13 +44,13 @@ input[type=checkbox] { accent-color: #dddddd; min-height: auto; }
 input[type=search] { width: 100%; min-width: 0; }
 fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 #inventory-count, #catalog-count { font-size: 12px; margin: 12px 0; }
-.grid-viewport { height: clamp(360px, 65vh, 780px); overflow: auto; position: relative; scrollbar-gutter: stable; overflow-anchor: none; }
+.grid-viewport { height: clamp(480px, 72vh, 860px); overflow: auto; position: relative; scrollbar-gutter: stable; overflow-anchor: none; }
 .grid-canvas { position: relative; }
-.grid-entry { position: absolute; height: 220px; }
-.item-card { position: relative; width: 100%; height: 220px; display: flex; flex-direction: column; align-items: stretch; text-align: left; padding: 12px; border: 0; background: var(--card); }
+.grid-entry { position: absolute; height: 184px; }
+.item-card { position: relative; width: 100%; height: 184px; display: flex; flex-direction: column; align-items: stretch; text-align: left; padding: 10px; border: 0; background: var(--card); }
 .item-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--rarity); }
 .item-card:hover:enabled { background: var(--hover); }
-.item-card .thumbnail { width: 100%; height: 112px; object-fit: contain; margin-bottom: 8px; }
+.item-card .thumbnail { width: 100%; height: 90px; object-fit: contain; margin-bottom: 6px; }
 .card-title, .card-subtitle { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .card-title { font-weight: 600; }
 .card-subtitle { color: var(--muted); font-size: 12px; margin-top: 4px; }
@@ -71,6 +71,9 @@ dl:empty, #selection-badges:empty, #selection-reason:empty, #message:empty { dis
 #selection-badges { font-size: 12px; }
 #create { width: 100%; background: #eeeeee; color: #141414; border-color: #eeeeee; font-weight: 600; margin: 16px 0; }
 #create:hover:enabled { background: #cccccc; border-color: #cccccc; }
+#create:disabled { opacity: 0.5; cursor: not-allowed; position: relative; }
+.connect-hint { font-size: 11px; color: #efb77d; text-align: center; margin: -12px 0 8px; display: none; }
+.connect-hint.visible { display: block; }
 .creation-feedback { position: sticky; bottom: 0; background: var(--background); z-index: 2; }
 .creation-feedback:has(#creation-status:not(:empty)), .creation-feedback:has(#deletion-status:not(:empty)), .creation-feedback:has(#view-created:not([hidden])) { padding: 8px 0; min-height: 48px; }
 #creation-status:empty { display: none; }

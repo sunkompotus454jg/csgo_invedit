@@ -169,6 +169,20 @@ function renderSelection() {
   $('selection-reason').textContent = [...new Set([record?.unavailableReason, record ? draftError : ''].filter(Boolean))].join(' ');
   setThumbnail($('selection-icon'), record ? (item ? icons?.candidates(item) : icons?.recordCandidates(record)) : icons?.candidates(item));
   $('create').disabled = !record || !item || !connection.canCreate;
+  // Show hint why create is disabled
+  const hint = $('connect-hint');
+  if (hint) {
+    let hintText = '';
+    if (record && item && !connection.canCreate) {
+      if (!connection.inventory.ready || connection.socket === null) {
+        hintText = '⚡ Нажмите «Connect» для подключения к игре';
+      } else if (connection.pendingCreate || connection.pendingDelete) {
+        hintText = '⏳ Ожидание ответа...';
+      }
+    }
+    hint.textContent = hintText;
+    hint.classList.toggle('visible', hintText !== '');
+  }
 }
 
 function renderCatalog(reset = false) {
