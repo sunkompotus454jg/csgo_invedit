@@ -64,109 +64,104 @@ function updateCard(node, item, record = null) {
   node.children[1].textContent = info.title;
   node.children[2].textContent = info.subtitle;
   renderBadges(node.children[3], info.badges);
-  setThumbnail(node.children[0], record ? (item ? icons?.candidates(item) : icons?.recordCandidates(record)) : icons?.candidates(item));
+  node.setAttribute('aria-label', [info.name, ...info.badges].join(', '));
+  node.title = info.name;
+  node.setAttribute('aria-pressed', String(record ? selectedKey === record.key : selectedId === item.highId));
+  node.classList.toggle('created-item', !record && connection.creation?.status === 'confirmed' && connection.creation.highId === item.highId);
+  setThumbnail(node.firstChild, record ? icons?.recordCandidates(record) : icons?.candidates(item));
 }
-const inventoryGrid = new VirtualGrid($('items'), createCard, (node, item) => updateCard(node, item, catalog?.definitions?.get(item.defIndex)), id => {
-  selectedId = Number(id); renderSelection();
+
+const inventoryGrid = new VirtualGrid($('items'), {
+  key: item => item.highId, create: createCard,
+  update: (node, item) => updateCard(node, item),
+  select: id => { selectedId = id; inventoryGrid.schedule(); renderSelection(); openDrawer(); },
 });
-const catalogueGrid = new VirtualGrid($('catalog-results'), createCard, (node, record) => updateCard(node, null, record), key => {
-  selectedKey = key; renderSelection();
+const catalogueGrid = new VirtualGrid($('catalog-results'), {
+  key: record => record.key, create: createCard,
+  update: (node, record) => updateCard(node, record.template ?? { defIndex: record.defIndex, rarity: record.rarity }, record),
+  select: key => { commitWear(); selectedKey = key; catalogueGrid.schedule(); renderSelection(); openDrawer(); },
 });
+
+$('catalog-results').addEventListener('dblclick', event => {
+  const card = event.target.closest('.item-card');
+  if (!card || narrow.matches) return;
+  commitWear();
+  selectedKey = card.dataset.key;
+  renderSelection();
+  addSelected();
+});
+
 function openDrawer() {
-  if (!narrow.matches || $('inspector').classList.contains('drawer-open')) return;
+  if (!narrow.matches || $('selection').hidden) return;
   drawerReturn = document.activeElement;
   $('inspector').classList.add('drawer-open');
   document.body.classList.add('drawer-active');
-  $('inspector-close').hidden = false;
+  $('inspector').setAttribute('role', 'dialog');
+  $('inspector').setAttribute('aria-modal', 'true');
+  document.querySelectorAll('main > :not(.workspace), .workspace > section').forEach(node => node.inert = true);
   $('inspector-close').focus();
 }
-function closeDrawer(restore = true) {
-  if (!$('inspector').classList.contains('drawer-open')) return;
+function closeDrawer(restoreFocus = true) {
   $('inspector').classList.remove('drawer-open');
   document.body.classList.remove('drawer-active');
-  $('inspector-close').hidden = true;
-  if (restore && drawerReturn && typeof drawerReturn.focus === 'function') drawerReturn.focus();
-  drawerReturn = null;
+  $('inspector').removeAttribute('role'); $('inspector').removeAttribute('aria-modal');
+  document.querySelectorAll('[inert]').forEach(node => node.inert = false);
+  if (restoreFocus && drawerReturn?.isConnected) drawerReturn.focus({ preventScroll: true });
 }
 $('inspector-close').addEventListener('click', () => closeDrawer());
-window.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && $('inspector').classList.contains('drawer-open')) {
-    event.preventDefault(); closeDrawer();
-  }
+narrow.addEventListener('change', () => { closeDrawer(false); $('inspector-close').hidden = !narrow.matches; });
+$('inspector-close').hidden = !narrow.matches;
+$('inspector').addEventListener('keydown', event => {
+  if (!$('inspector').classList.contains('drawer-open')) return;
+  if (event.key === 'Escape') { event.preventDefault(); closeDrawer(); }
+  if (event.key !== 'Tab') return;
+  const controls = [...$('inspector').querySelectorAll('button, input')].filter(node => !node.disabled && node.getClientRects().length);
+  const first = controls[0], last = controls.at(-1);
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
 });
-narrow.addEventListener('change', () => {
-  if (!narrow.matches) closeDrawer(false);
-});
+
 function renderSelection() {
-  const isInventory = activeTab === 'inventory';
-  const item = isInventory ? connection.inventory.items.get(selectedId) : selectedTemplate();
-  const record = isInventory ? (item ? catalog?.definitions?.get(item.defIndex) : null) : (selectedKey ? catalog?.records?.get(selectedKey) : null);
-  const selected = Boolean(record || item);
-  for (const node of document.querySelectorAll('.item-card[aria-pressed=true]')) node.setAttribute('aria-pressed', 'false');
-  const target = document.querySelector(`.item-card[data-key="${CSS.escape(isInventory ? selectedId : selectedKey)}"]`);
-  if (target) target.setAttribute('aria-pressed', 'true');
-  $('selection').hidden = !selected; $('inspector-empty').hidden = selected;
-  if (selected) openDrawer();
-  if (!selected) {
-    commitWear();
-    renderedWearKey = null; $('selection-icon').src = '';
-    return;
+  const record = activeTab === 'catalog' ? catalog?.records.get(selectedKey) : null;
+  const draft = record ? creationDraft() : null;
+  let controls = draft;
+  if (record?.template && !controls) {
+    try { const defaults = new CreationPreferences(); defaults.statTrak = preferences.statTrak; controls = defaults.build(catalog, selectedKey); } catch {}
   }
-  const info = presentation.item(item, record);
-  $('selection').style.setProperty('--rarity', info.color);
-  $('selection-name').textContent = info.fullName;
+  const item = activeTab === 'inventory' ? connection.inventory.items.get(selectedId) : draft?.item;
+  const hasSelection = Boolean(record || item);
+  $('selection').hidden = !hasSelection;
+  $('inspector-empty').hidden = hasSelection;
+  $('create').hidden = activeTab !== 'catalog';
+  $('stattrak-label').hidden = !record?.statTrakTemplate;
+  $('creation-controls').hidden = !record?.template;
+  $('stattrak').checked = preferences.statTrak;
+  $('paint-controls').hidden = !controls?.painted;
+  $('counter-label').hidden = !controls?.statTrak;
+  $('delete').hidden = activeTab !== 'inventory';
+  $('delete').disabled = !item || !connection.canMutate;
+  $('deletion-status').textContent = connection.deletion?.message || '';
+  if (controls?.painted) {
+    for (const id of ['wear', 'wear-slider']) { $(id).min = controls.min; $(id).max = controls.max; }
+    const wear = preferences.wear === null ? controls.min : preferences.commitWear(preferences.wear, controls.min, controls.max);
+    if (renderedWearKey !== record.key || (!wearDirty && document.activeElement !== $('wear'))) $('wear').value = wear;
+    if (renderedWearKey !== record.key) wearDirty = false;
+    $('wear-slider').value = wear;
+  }
+  renderedWearKey = controls?.painted ? record.key : null;
+  $('creation-status').textContent = connection.creation?.message || '';
+  $('view-created').hidden = !(connection.creation?.status === 'confirmed' && connection.inventory.items.has(connection.creation.highId));
+  if (!hasSelection) { closeDrawer(false); return; }
+  const info = presentation.item(item ?? { defIndex: record.defIndex }, record);
+  $('selection-name').textContent = info.name;
   renderBadges($('selection-badges'), info.badges);
-  const canPaint = Boolean(record?.template?.attributes?.some(attr => attr.defIndex === 6));
-  const hasWear = canPaint && record?.wearMin !== undefined && record?.wearMax !== undefined;
-  const isPaint = Boolean(record?.kind === 'paint');
-  const allowStatTrak = Boolean(record?.statTrakAvailable);
-  const isVariant = Boolean(record?.kind && record.kind !== 'definition');
-  $('creation-controls').hidden = isInventory || (!isVariant && !canPaint && !allowStatTrak);
-  $('paint-controls').hidden = isInventory || !canPaint;
-  $('seed').disabled = isInventory || !canPaint;
-  $('stattrak-label').hidden = isInventory || !allowStatTrak;
-  $('counter-label').hidden = isInventory || !allowStatTrak || !preferences.statTrak;
-  if (!isInventory && canPaint && renderedWearKey !== selectedKey) {
-    preferences.resetTo(record);
-    $('wear').min = hasWear ? String(record.wearMin) : '0';
-    $('wear').max = hasWear ? String(record.wearMax) : '1';
-    $('wear-slider').min = $('wear').min;
-    $('wear-slider').max = $('wear').max;
-    $('wear').disabled = !hasWear;
-    $('wear-slider').disabled = !hasWear;
-    $('wear').value = preferences.wear;
-    $('wear-slider').value = preferences.wear;
-    $('seed').value = preferences.seed;
-    wearDirty = false;
-    renderedWearKey = selectedKey;
-  }
-  if (!isInventory) {
-    $('stattrak').checked = preferences.statTrak;
-    $('counter').value = preferences.counter;
-  }
-  $('delete').hidden = !isInventory;
-  $('delete').disabled = !isInventory || !connection.canMutate;
   const details = [];
-  if (isInventory && item) {
-    details.push(['Inventory ID', String(item.highId)]);
-    details.push(['Def index', String(item.defIndex)]);
-    details.push(['Quality', String(item.quality)]);
-    details.push(['Rarity', String(item.rarity)]);
-    details.push(['Origin', String(item.origin)]);
-    details.push(['Level', String(item.level)]);
-    details.push(['Flags', String(item.flags)]);
-    for (const attr of item.attributes) {
-      details.push([`Attribute ${attr.defIndex}`, attr.value]);
+  if (!record) {
+    details.push(['Item', item.highId]);
+    for (const [id, label] of [[8, 'Paint wear'], [7, 'Paint seed']]) {
+      const attribute = item.attributes.find(a => a.defIndex === id);
+      if (attribute) details.push([label, attribute.value]);
     }
-    for (const equip of item.equips) {
-      details.push([`Equipped (class ${equip.classId})`, `Slot ${equip.slotId}`]);
-    }
-  } else if (record) {
-    if (record.defIndex != null) details.push(['Def index', String(record.defIndex)]);
-    if (record.quality != null) details.push(['Quality', String(record.quality)]);
-    if (record.rarity != null) details.push(['Rarity', String(record.rarity)]);
-    if (record.category) details.push(['Category', record.category]);
-    if (record.collections?.length) details.push(['Collection', record.collections.join(', ')]);
   }
   if (record?.resultDefIndex != null) details.push(['Coupon creates', `Definition ${record.resultDefIndex}`]);
   if (record?.forcedStatTrak) details.push(['StatTrak', 'Forced coupon default']);
@@ -268,6 +263,7 @@ window.addEventListener('pagehide', () => connection.disconnect());
 for (const id of ['catalog-view', 'catalog-category', 'catalog-all', 'catalog-search']) {
   $(id).addEventListener(id === 'catalog-search' ? 'input' : 'change', () => renderCatalog(true));
 }
+
 if ($('catalog-color')) {
   $('catalog-color').addEventListener('change', () => {
     const val = $('catalog-color').value;
@@ -318,17 +314,24 @@ function addSelected() {
     const record = catalog.records.get(selectedKey);
     connection.create(selectedTemplate(), record.name || record.internalName || record.key);
   } catch (error) {
-    $('selection-reason').textContent = error.message;
+    $('creation-status').textContent = error.message;
   }
 }
 $('create').addEventListener('click', addSelected);
 $('delete').addEventListener('click', () => {
-  if (!connection.canMutate || selectedId === null) return;
   const item = connection.inventory.items.get(selectedId);
-  const record = item ? catalog?.definitions?.get(item.defIndex) : null;
-  const label = record?.name || (item ? `item ${item.highId}` : 'item');
-  try { connection.delete(selectedId, label); }
-  catch (error) { $('message').textContent = error.message; }
+  if (!item || !connection.canMutate) return;
+  try { connection.delete(item.highId, presentation.item(item).name); }
+  catch (error) { $('deletion-status').textContent = error.message; }
+});
+$('view-created').addEventListener('click', () => {
+  const id = connection.creation?.highId;
+  if (!connection.inventory.items.has(id)) return;
+  if (!inventoryMatches.some(item => item.highId === id)) {
+    $('inventory-search').value = ''; $('inventory-category').value = ''; rebuildInventory(true);
+  }
+  selectedId = id; switchTab('inventory');
+  requestAnimationFrame(() => { inventoryGrid.reveal(id, true); renderSelection(); openDrawer(); });
 });
 
 function renderPresets() {
@@ -440,7 +443,7 @@ async function applyPreset(preset) {
       if (!record) continue;
 
       progressText.textContent = `Добавляем ${i + 1} из ${total}: ${record.name}...`;
-      progressBar.style.width = `${Math.round(((i) / total) * 100)}%`;
+      progressBar.style.width = `${Math.round((i / total) * 100)}%`;
 
       const ready = await waitForReady(connection, 8000);
       if (!ready) {
@@ -465,7 +468,6 @@ async function applyPreset(preset) {
   }
 }
 
-// Preset filter controls
 document.querySelectorAll('.side-selector .side-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.side-selector .side-btn').forEach(b => b.classList.remove('active'));
