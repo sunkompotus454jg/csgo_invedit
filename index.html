@@ -26,6 +26,7 @@
 <div class="tabs" role="tablist" aria-label="Workspace">
 <button id="inventory-tab" role="tab" aria-selected="true" aria-controls="inventory-panel">Inventory <span id="count">(0 items)</span></button>
 <button id="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-panel" tabindex="-1">Catalogue</button>
+<button id="presets-tab" role="tab" aria-selected="false" aria-controls="presets-panel" tabindex="-1">⚡ Presets (Сеты)</button>
 </div>
 <div class="workspace">
 <section id="inventory-panel" role="tabpanel" aria-labelledby="inventory-tab">
@@ -43,7 +44,31 @@
 <div class="filters">
 <label>Search catalogue<input id="catalog-search" type="search" placeholder="Search items&hellip;"></label>
 <label>Category<select id="catalog-category"><option value="">All categories</option></select></label>
+<label>Color<select id="catalog-color">
+<option value="">All colors</option>
+<option value="red">🔴 Red (Красный)</option>
+<option value="blue">🔵 Blue (Синий)</option>
+<option value="green">🟢 Green (Зеленый)</option>
+<option value="yellow">🟡 Yellow/Gold (Золотой)</option>
+<option value="purple">🟣 Purple (Фиолетовый)</option>
+<option value="pink">🌸 Pink (Розовый)</option>
+<option value="orange">🟠 Orange (Оранжевый)</option>
+<option value="white">⚪ White (Белый)</option>
+<option value="black">⚫ Black (Черный)</option>
+</select></label>
 <label>View<select id="catalog-view"><option value="variants">Variants</option><option value="definitions">Definitions</option></select></label>
+</div>
+<div id="catalog-color-pills" class="color-pills" aria-label="Color quick filter">
+<button type="button" class="color-pill active" data-color="">Все</button>
+<button type="button" class="color-pill" data-color="red" style="--pill-color:#e63946">🔴 Красный</button>
+<button type="button" class="color-pill" data-color="blue" style="--pill-color:#3a86ff">🔵 Синий</button>
+<button type="button" class="color-pill" data-color="green" style="--pill-color:#2a9d8f">🟢 Зеленый</button>
+<button type="button" class="color-pill" data-color="yellow" style="--pill-color:#ffb703">🟡 Золотой</button>
+<button type="button" class="color-pill" data-color="purple" style="--pill-color:#9d4edd">🟣 Фиолетовый</button>
+<button type="button" class="color-pill" data-color="pink" style="--pill-color:#f72585">🌸 Розовый</button>
+<button type="button" class="color-pill" data-color="orange" style="--pill-color:#fb8500">🟠 Оранжевый</button>
+<button type="button" class="color-pill" data-color="white" style="--pill-color:#e9ecef">⚪ Белый</button>
+<button type="button" class="color-pill" data-color="black" style="--pill-color:#343a40">⚫ Черный</button>
 </div>
 <div id="advanced-label" hidden>
 <label><input id="catalog-all" type="checkbox"> Show hidden and special items</label>
@@ -51,6 +76,34 @@
 <p id="catalog-count" role="status" aria-live="polite"></p>
 <div id="catalog-results" class="grid-viewport" role="list" aria-label="Catalogue items"></div>
 </fieldset>
+</section>
+<section id="presets-panel" role="tabpanel" aria-labelledby="presets-tab" hidden>
+<div class="presets-header">
+<div class="presets-filters">
+<div class="side-selector" role="group" aria-label="Filter by side">
+<button type="button" class="side-btn active" data-side="all">Все сеты</button>
+<button type="button" class="side-btn" data-side="T">🔴 T-Side</button>
+<button type="button" class="side-btn" data-side="CT">🔵 CT-Side</button>
+</div>
+<label class="presets-color-label">Цвет сета
+<select id="presets-color-filter">
+<option value="">Все цвета</option>
+<option value="red">🔴 Красные</option>
+<option value="blue">🔵 Синие</option>
+<option value="yellow">🟡 Золотые</option>
+<option value="white">⚪ Белые</option>
+<option value="purple">🟣 Фиолетовые</option>
+<option value="green">🟢 Зеленые</option>
+<option value="black">⚫ Черные</option>
+</select>
+</label>
+</div>
+<div id="preset-progress-container" class="preset-progress-container" hidden>
+<span id="preset-progress-text">Добавление сета...</span>
+<div class="progress-track"><div id="preset-progress-bar" class="progress-fill"></div></div>
+</div>
+</div>
+<div id="presets-grid" class="presets-grid"></div>
 </section>
 <aside id="inspector" aria-label="Item inspector">
 <button id="inspector-close" hidden aria-label="Close item inspector">Close</button>

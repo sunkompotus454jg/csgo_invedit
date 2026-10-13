@@ -1,3 +1,5 @@
+import { detectColor } from './color-filter.js';
+
 export const PAGE_SIZE = 50;
 
 // The exporter uses casefold and collapses whitespace, underscores, pipes and #.
@@ -18,20 +20,23 @@ export class Catalog {
     this.definitions = new Map();
     this.attributes = new Map();
     this.searchTexts = new Map();
+    this.colors = new Map();
     for (const record of [...data.definitions, ...data.variants]) {
       if (!record || typeof record.key !== 'string' || this.records.has(record.key)) throw new Error('Invalid catalogue record key.');
       this.records.set(record.key, record);
       this.searchTexts.set(record.key, normalizeSearch([record.searchText ?? '', ...(record.aliases ?? []), record.defIndex, record.kitId ?? ''].join(' ')));
+      this.colors.set(record.key, detectColor(record.name || record.searchText || ''));
     }
     for (const record of data.definitions) this.definitions.set(record.defIndex, record);
     for (const record of data.attributes) this.attributes.set(record.id, record);
   }
 
-  search({ view = 'definitions', category = '', query = '', allDefinitions = false } = {}) {
+  search({ view = 'definitions', category = '', query = '', color = '', allDefinitions = false } = {}) {
     const tokens = normalizeSearch(query).split(' ').filter(Boolean);
     return this.data[view].filter(record =>
       (view !== 'definitions' || allDefinitions || !record.advancedOnly) &&
       (!category || record.category === category) &&
+      (!color || this.colors.get(record.key) === color) &&
       tokens.every(token => this.searchTexts.get(record.key).includes(token)));
   }
 
