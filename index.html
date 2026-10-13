@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Inventory editor</title>
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 <main>
@@ -84,6 +84,7 @@
 <div class="presets-filters">
 <div class="side-selector" role="group" aria-label="Filter by side">
 <button type="button" class="side-btn active" data-side="all">Все сеты</button>
+<button type="button" class="side-btn" data-side="custom">⭐ Мои сеты</button>
 <button type="button" class="side-btn" data-side="T">🔴 T-Side</button>
 <button type="button" class="side-btn" data-side="CT">🔵 CT-Side</button>
 </div>
@@ -99,6 +100,7 @@
 <option value="black">⚫ Черные</option>
 </select>
 </label>
+<button id="btn-create-preset" type="button" class="btn-create-preset">➕ Создать свой сет</button>
 </div>
 <div id="preset-progress-container" class="preset-progress-container" hidden>
 <span id="preset-progress-text">Добавление сета...</span>
@@ -128,6 +130,7 @@
 </fieldset>
 <p id="selection-reason"></p>
 <button id="create" disabled>Add to inventory</button>
+<button id="add-to-preset" type="button" class="btn-add-to-preset" hidden>⭐ Добавить в мой сет</button>
 <p id="connect-hint" class="connect-hint"></p>
 <button id="delete" hidden disabled>Delete item</button>
 </section>
@@ -138,7 +141,82 @@
 <p id="deletion-status" role="status" aria-live="polite"></p>
 <button id="view-created" hidden>View in inventory</button>
 </div>
+
+<!-- Modal for Creating Preset -->
+<div id="modal-create-preset" class="modal-backdrop" hidden>
+  <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="create-preset-heading">
+    <div class="modal-header">
+      <h3 id="create-preset-heading">✨ Создать свой сет</h3>
+      <button type="button" class="modal-close" id="modal-create-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <form id="form-create-preset" class="modal-body">
+      <label>
+        Название сета *
+        <input id="input-preset-title" type="text" placeholder="например: Черный дракон, Мой сет для турнира" required>
+      </label>
+      <label>
+        Сторона
+        <select id="select-preset-side">
+          <option value="all">Любая сторона (T & CT)</option>
+          <option value="T">🔴 Только T-Side</option>
+          <option value="CT">🔵 Только CT-Side</option>
+        </select>
+      </label>
+      <label>
+        Цвет темы
+        <select id="select-preset-color">
+          <option value="">Все цвета / Без цвета</option>
+          <option value="red">🔴 Красный</option>
+          <option value="blue">🔵 Синий</option>
+          <option value="green">🟢 Зеленый</option>
+          <option value="yellow">🟡 Золотой / Желтый</option>
+          <option value="purple">🟣 Фиолетовый</option>
+          <option value="pink">🌸 Розовый</option>
+          <option value="orange">🟠 Оранжевый</option>
+          <option value="white">⚪ Белый</option>
+          <option value="black">⚫ Черный</option>
+        </select>
+      </label>
+      <label>
+        Описание (необязательно)
+        <input id="input-preset-desc" type="text" placeholder="например: Любимые скины на калаш, авп и дигл">
+      </label>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="btn-cancel-create">Отмена</button>
+        <button type="submit" class="btn-primary" id="btn-submit-create">Создать сет</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal for Adding Skin to Preset -->
+<div id="modal-add-to-preset" class="modal-backdrop" hidden>
+  <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="add-preset-heading">
+    <div class="modal-header">
+      <h3 id="add-preset-heading">⭐ Добавить в свой сет</h3>
+      <button type="button" class="modal-close" id="modal-add-close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="add-preset-item-preview" class="add-preset-preview">
+        <img id="add-preset-thumb" class="thumbnail" width="56" height="42" alt="">
+        <div>
+          <div id="add-preset-skin-name" class="add-preset-name"></div>
+          <div class="add-preset-subtitle">Выберите сет, в который хотите добавить этот скин:</div>
+        </div>
+      </div>
+      <div id="add-preset-list" class="preset-picker-list"></div>
+      <button type="button" id="btn-create-from-picker" class="btn-create-preset" style="width: 100%; justify-content: center; margin-top: 8px;">
+        ➕ Создать новый сет с этим скином
+      </button>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" id="btn-cancel-add">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-notification" class="toast-notification" hidden></div>
 </main>
-<script type="module" src="app.js?v=6"></script>
+<script type="module" src="app.js?v=7"></script>
 </body>
 </html>

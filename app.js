@@ -361,6 +361,9 @@ function renderSelection() {
   $('selection-reason').textContent = [...new Set([record?.unavailableReason, record ? draftError : ''].filter(Boolean))].join(' ');
   setThumbnail($('selection-icon'), record ? (item ? icons?.candidates(item) : icons?.recordCandidates(record)) : icons?.candidates(item));
   $('create').disabled = !record || !item || !connection.canCreate;
+  if ($('add-to-preset')) {
+    $('add-to-preset').hidden = activeTab !== 'catalog' || !record;
+  }
   // Show hint why create is disabled
   const hint = $('connect-hint');
   if (hint) {
@@ -563,11 +566,155 @@ $('view-created').addEventListener('click', () => {
   requestAnimationFrame(() => { inventoryGrid.reveal(id, true); renderSelection(); openDrawer(); });
 });
 
+// --- Custom Presets Management ---
+const USER_PRESETS_KEY = 'csgo_invedit_user_presets';
+
+function loadUserPresets() {
+  try {
+    const raw = localStorage.getItem(USER_PRESETS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error('Failed to load user presets:', e);
+    return [];
+  }
+}
+
+function saveUserPresets(presets) {
+  try {
+    localStorage.setItem(USER_PRESETS_KEY, JSON.stringify(presets));
+  } catch (e) {
+    console.error('Failed to save user presets:', e);
+  }
+}
+
+function getAllPresets() {
+  const userPresets = loadUserPresets();
+  return [...userPresets, ...PRESETS];
+}
+
+function showToast(message, durationMs = 3000) {
+  const toast = $('toast-notification');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.hidden = false;
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => { toast.hidden = true; }, durationMs);
+}
+
+let pendingSkinForNewPreset = null;
+
+function openCreatePresetModal(pendingSkin = null) {
+  pendingSkinForNewPreset = pendingSkin;
+  $('input-preset-title').value = pendingSkin ? `Сет: ${pendingSkin.name.split(' | ')[0]}` : '';
+  $('input-preset-desc').value = '';
+  $('select-preset-side').value = 'all';
+  $('select-preset-color').value = '';
+  $('modal-create-preset').hidden = false;
+  $('input-preset-title').focus();
+}
+
+function closeCreatePresetModal() {
+  $('modal-create-preset').hidden = true;
+  pendingSkinForNewPreset = null;
+}
+
+function openAddToPresetModal(record) {
+  const userPresets = loadUserPresets();
+  if (userPresets.length === 0) {
+    openCreatePresetModal({ key: record.key, name: record.name });
+    return;
+  }
+  $('add-preset-skin-name').textContent = record.name;
+  setThumbnail($('add-preset-thumb'), icons?.recordCandidates(record));
+
+  const list = $('add-preset-list');
+  list.replaceChildren();
+
+  for (const preset of userPresets) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'preset-picker-item';
+    const hasItem = preset.items.some(i => i.key === record.key);
+
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'preset-picker-item-title';
+    titleSpan.textContent = preset.title;
+
+    const countSpan = document.createElement('span');
+    countSpan.className = 'preset-picker-item-count';
+    countSpan.textContent = hasItem ? `✓ В сете (${preset.items.length})` : `${preset.items.length} предм.`;
+
+    btn.append(titleSpan, countSpan);
+    btn.addEventListener('click', () => {
+      addSkinToPreset(preset.id, record);
+      closeAddToPresetModal();
+    });
+    list.append(btn);
+  }
+
+  $('btn-create-from-picker').onclick = () => {
+    closeAddToPresetModal();
+    openCreatePresetModal({ key: record.key, name: record.name });
+  };
+
+  $('modal-add-to-preset').hidden = false;
+}
+
+function closeAddToPresetModal() {
+  $('modal-add-to-preset').hidden = true;
+}
+
+function addSkinToPreset(presetId, record) {
+  const presets = loadUserPresets();
+  const preset = presets.find(p => p.id === presetId);
+  if (!preset) return;
+  const alreadyHas = preset.items.some(i => i.key === record.key);
+  preset.items.push({ key: record.key, name: record.name });
+  saveUserPresets(presets);
+  showToast(alreadyHas
+    ? `⚠️ Скин "${record.name}" добавлен повторно в "${preset.title}"`
+    : `✅ Скин "${record.name}" добавлен в сет "${preset.title}"!`);
+
+  const addBtn = $('add-to-preset');
+  if (addBtn) {
+    const prevText = addBtn.textContent;
+    addBtn.textContent = '✅ Добавлено!';
+    setTimeout(() => { if (addBtn) addBtn.textContent = prevText; }, 1500);
+  }
+  renderPresets();
+}
+
+function removeSkinFromPreset(presetId, itemIndex) {
+  const presets = loadUserPresets();
+  const preset = presets.find(p => p.id === presetId);
+  if (!preset) return;
+  const removed = preset.items.splice(itemIndex, 1);
+  saveUserPresets(presets);
+  showToast(`🗑️ Скин "${removed[0]?.name || ''}" удален из сета`);
+  renderPresets();
+}
+
+function deleteUserPreset(presetId) {
+  const presets = loadUserPresets();
+  const preset = presets.find(p => p.id === presetId);
+  if (!preset) return;
+  if (!confirm(`Удалить сет "${preset.title}"?`)) return;
+  const updated = presets.filter(p => p.id !== presetId);
+  saveUserPresets(updated);
+  showToast(`🗑️ Сет "${preset.title}" удален`);
+  renderPresets();
+}
+
 function renderPresets() {
   const grid = $('presets-grid');
   if (!grid) return;
-  const filtered = PRESETS.filter(p => {
-    const matchSide = activePresetSide === 'all' || p.side === activePresetSide;
+  const all = getAllPresets();
+  const filtered = all.filter(p => {
+    let matchSide = false;
+    if (activePresetSide === 'all') matchSide = true;
+    else if (activePresetSide === 'custom') matchSide = Boolean(p.isCustom);
+    else matchSide = p.side === activePresetSide || (p.isCustom && p.side === 'all');
+
     const matchColor = !activePresetColor || p.color === activePresetColor;
     return matchSide && matchColor;
   });
@@ -591,44 +738,84 @@ function createPresetCard(preset) {
 
   const badges = document.createElement('div');
   badges.className = 'preset-badges';
+  if (preset.isCustom) {
+    const customBadge = document.createElement('span');
+    customBadge.className = 'badge badge-custom';
+    customBadge.textContent = '⭐ Мой сет';
+    badges.append(customBadge);
+  }
   const sideBadge = document.createElement('span');
   sideBadge.className = `badge badge-${preset.side.toLowerCase()}`;
-  sideBadge.textContent = preset.side + '-Side';
+  sideBadge.textContent = preset.side === 'all' ? 'T & CT' : preset.side + '-Side';
   const countBadge = document.createElement('span');
   countBadge.className = 'badge badge-color';
   countBadge.textContent = `${preset.items.length} предм.`;
   badges.append(sideBadge, countBadge);
 
+  if (preset.isCustom) {
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'preset-card-delete';
+    deleteBtn.title = 'Удалить этот сет';
+    deleteBtn.textContent = '🗑️';
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteUserPreset(preset.id);
+    });
+    badges.append(deleteBtn);
+  }
+
   header.append(titleBox, badges);
 
   const list = document.createElement('div');
   list.className = 'preset-items-list';
-  for (const item of preset.items) {
-    const row = document.createElement('div');
-    row.className = 'preset-item-row';
-    const thumb = createThumbnail();
-    thumb.className = 'thumbnail';
-    const record = catalog?.records?.get(item.key);
-    if (record) {
-      setThumbnail(thumb, icons?.recordCandidates(record));
-    }
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'preset-item-name';
-    nameSpan.textContent = item.name;
-    row.append(thumb, nameSpan);
-    row.title = 'Нажмите, чтобы открыть в каталоге';
-    row.addEventListener('click', () => {
-      selectedKey = item.key;
-      switchTab('catalog');
+  if (preset.items.length === 0) {
+    const emptyNotice = document.createElement('div');
+    emptyNotice.className = 'preset-empty-items';
+    emptyNotice.textContent = 'В этом сете пока нет скинов. Выберите скин в Каталоге и нажмите «⭐ Добавить в мой сет».';
+    list.append(emptyNotice);
+  } else {
+    preset.items.forEach((item, index) => {
+      const row = document.createElement('div');
+      row.className = 'preset-item-row';
+      const thumb = createThumbnail();
+      thumb.className = 'thumbnail';
+      const record = catalog?.records?.get(item.key);
+      if (record) {
+        setThumbnail(thumb, icons?.recordCandidates(record));
+      }
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'preset-item-name';
+      nameSpan.textContent = item.name;
+      row.append(thumb, nameSpan);
+      row.title = 'Нажмите, чтобы открыть в каталоге';
+      row.addEventListener('click', () => {
+        selectedKey = item.key;
+        switchTab('catalog');
+      });
+
+      if (preset.isCustom) {
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'preset-item-remove';
+        removeBtn.title = 'Удалить скин из сета';
+        removeBtn.textContent = '✕';
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeSkinFromPreset(preset.id, index);
+        });
+        row.append(removeBtn);
+      }
+
+      list.append(row);
     });
-    list.append(row);
   }
 
   const applyBtn = document.createElement('button');
   applyBtn.type = 'button';
   applyBtn.className = 'btn-apply-preset';
   applyBtn.textContent = `⚡ Добавить весь сет (${preset.items.length})`;
-  applyBtn.disabled = !connection.inventory.ready || isApplyingPreset;
+  applyBtn.disabled = !connection.inventory.ready || isApplyingPreset || preset.items.length === 0;
   applyBtn.addEventListener('click', () => applyPreset(preset));
 
   card.append(header, list, applyBtn);
@@ -711,6 +898,52 @@ if ($('presets-color-filter')) {
     renderPresets();
   });
 }
+
+$('btn-create-preset')?.addEventListener('click', () => openCreatePresetModal());
+$('modal-create-close')?.addEventListener('click', closeCreatePresetModal);
+$('btn-cancel-create')?.addEventListener('click', closeCreatePresetModal);
+$('modal-add-close')?.addEventListener('click', closeAddToPresetModal);
+$('btn-cancel-add')?.addEventListener('click', closeAddToPresetModal);
+$('modal-create-preset')?.addEventListener('click', e => { if (e.target === $('modal-create-preset')) closeCreatePresetModal(); });
+$('modal-add-to-preset')?.addEventListener('click', e => { if (e.target === $('modal-add-to-preset')) closeAddToPresetModal(); });
+$('add-to-preset')?.addEventListener('click', () => {
+  const record = catalog?.records.get(selectedKey);
+  if (record) openAddToPresetModal(record);
+});
+
+$('form-create-preset')?.addEventListener('submit', event => {
+  event.preventDefault();
+  const title = $('input-preset-title').value.trim();
+  if (!title) return;
+  const side = $('select-preset-side').value;
+  const color = $('select-preset-color').value;
+  const desc = $('input-preset-desc').value.trim();
+
+  const newPreset = {
+    id: 'custom_' + Date.now(),
+    title,
+    side,
+    color,
+    desc: desc || 'Пользовательский сет',
+    isCustom: true,
+    items: pendingSkinForNewPreset ? [{ key: pendingSkinForNewPreset.key, name: pendingSkinForNewPreset.name }] : []
+  };
+
+  const presets = loadUserPresets();
+  presets.unshift(newPreset);
+  saveUserPresets(presets);
+
+  closeCreatePresetModal();
+  showToast(pendingSkinForNewPreset
+    ? `✨ Сет "${title}" создан и скин добавлен!`
+    : `✨ Сет "${title}" создан!`);
+
+  activePresetSide = 'custom';
+  document.querySelectorAll('.side-selector .side-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.side === 'custom');
+  });
+  renderPresets();
+});
 
 async function initializeCatalog() {
   if (loading) return;
